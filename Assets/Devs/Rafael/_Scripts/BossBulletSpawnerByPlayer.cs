@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using static UnityEditor.PlayerSettings;
 
-public class BossBulletSpawner : MonoBehaviour
+public class BossBulletSpawnerByPlayer : MonoBehaviour
 {
     [SerializeField] private GameObject bullet;
     [SerializeField] private float tiempoEntreBullets;
@@ -18,7 +18,7 @@ public class BossBulletSpawner : MonoBehaviour
     void Start()
     {
         player = GameObject.FindWithTag("Player");
-        StartCoroutine(SpawnBulletHorizontal());
+        StartCoroutine(SpawnBullet());
         playerPos = player.transform.position.x - this.gameObject.transform.position.x;
 
         //Este es el punto mas bajo que tiene la capsula para iniciar desde ahi la bala
@@ -30,7 +30,7 @@ public class BossBulletSpawner : MonoBehaviour
         playerPos = player.transform.position.x - this.gameObject.transform.position.x;
     }
 
-    IEnumerator SpawnBulletHorizontal()
+    IEnumerator SpawnBullet()
     {
         while (true)
         {
