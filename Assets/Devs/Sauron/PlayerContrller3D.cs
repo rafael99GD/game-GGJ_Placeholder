@@ -36,7 +36,7 @@ public class PlayerController3D : MonoBehaviour
     {
         if (Input.GetButtonDown("Jump"))
         {
-            Debug.Log("SALTO DETECTADO");
+            //Debug.Log("SALTO DETECTADO");
             _jumpPressed = true;
         }
     }
@@ -55,7 +55,7 @@ public class PlayerController3D : MonoBehaviour
         _rb.linearVelocity = _velocity;
 
         // Debug para comprobar grounded y velocidad
-        Debug.Log("Grounded: " + _grounded + " | Velocity Y: " + _velocity.y);
+        //Debug.Log("Grounded: " + _grounded + " | Velocity Y: " + _velocity.y);
     }
 
     // --------------------------
@@ -75,7 +75,7 @@ public class PlayerController3D : MonoBehaviour
         );
 
         // Debug visual en Scene
-        Debug.DrawRay(footPos, Vector3.down * 0.5f, _grounded ? Color.green : Color.red);
+        //Debug.DrawRay(footPos, Vector3.down * 0.5f, _grounded ? Color.green : Color.red);
     }
 
     // --------------------------
