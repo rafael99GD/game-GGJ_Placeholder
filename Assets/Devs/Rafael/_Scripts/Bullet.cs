@@ -4,28 +4,25 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
-    [SerializeField] private int velocidad;
-    [SerializeField] private int tiempoVida = 8;
+    [Header("Paraemtros de la Bala")]
+    [HideInInspector] public int velocidad;
+    [HideInInspector] public int tiempoVida = 8;
+    [HideInInspector] public Vector3 direccionDisparo;
 
-    GameObject player;
-    float playerPos;
-
-    void Start()
+    private void Start()
     {
-        player = GameObject.FindWithTag("Player");
-        playerPos = player.transform.position.x - this.gameObject.transform.position.x;
-        StartCoroutine(Eliminar());
+        StartCoroutine(EliminarBala());
     }
 
     void Update()
     {
-        if (playerPos > 0) this.transform.position = this.transform.position + (Vector3.right * velocidad * Time.deltaTime);
-        else this.transform.position = this.transform.position + (Vector3.left * velocidad * Time.deltaTime);
+        transform.position += direccionDisparo * velocidad * Time.deltaTime;
     }
 
-    IEnumerator Eliminar()
+    IEnumerator EliminarBala()
     {
         yield return new WaitForSeconds(tiempoVida);
         Destroy(this.gameObject);
     }
+
 }
