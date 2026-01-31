@@ -121,4 +121,12 @@ public class PlayerController3D : MonoBehaviour
                 _velocity.y = 0f;
         }
     }
+    private void OnTriggerEnter2D(Collider2D other)
+{
+    if (other.CompareTag("ZonaProhibida"))
+    {
+        Debug.Log("No puedes pasar");
+    }
+}
+
 }
