@@ -1,6 +1,7 @@
-using UnityEngine;
-
-public class IInteractuable
+namespace Interactions
 {
-    
+    public interface IInteractuable
+    {
+        void Interactuar();
+    }
 }
