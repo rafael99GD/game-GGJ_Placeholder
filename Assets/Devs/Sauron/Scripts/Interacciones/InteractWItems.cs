@@ -4,44 +4,46 @@ using Interactions;
 public class InteractWItems : MonoBehaviour
 {
     [SerializeField] private Transform controladorInteractuar;
-    [SerializeField] private Vector3 dimensionesCaja;
+    [SerializeField] private Vector3 dimensionesCaja = new Vector3(1f, 1f, 1f);
     [SerializeField] private LayerMask capasInteractuables;
 
-    private void Update()
+    PlayerInteractorState _state;
+
+    void Awake()
     {
+        _state = GetComponent<PlayerInteractorState>();
+    }
+
+    void Update()
+    {
+        if (_state != null && !_state.CanInteract) return;
+
         if (Input.GetButtonDown("Interactuar"))
         {
             Interactuar();
         }
     }
 
-    private void Interactuar()
+    void Interactuar()
     {
-        Debug.Log("Intentando interactuar");
-
         Collider[] objetosTocados = Physics.OverlapBox(
             controladorInteractuar.position,
-            dimensionesCaja / 2,
+            dimensionesCaja * 0.5f,
             Quaternion.identity,
             capasInteractuables
         );
 
-        Debug.Log("Detectados: " + objetosTocados.Length);
-
         foreach (Collider objeto in objetosTocados)
         {
-            Debug.Log("Tocado: " + objeto.name);
-
             if (objeto.TryGetComponent(out IInteractuable interactuable))
             {
-                Debug.Log("Interactuable encontrado");
                 interactuable.Interactuar();
                 break;
             }
         }
     }
 
-    private void OnDrawGizmos()
+    void OnDrawGizmos()
     {
         if (controladorInteractuar == null) return;
 
@@ -51,6 +53,7 @@ public class InteractWItems : MonoBehaviour
             Quaternion.identity,
             Vector3.one
         );
+
         Gizmos.DrawWireCube(Vector3.zero, dimensionesCaja);
     }
 }

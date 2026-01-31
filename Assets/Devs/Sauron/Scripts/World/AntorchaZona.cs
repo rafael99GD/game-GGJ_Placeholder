@@ -8,12 +8,17 @@ public class AntorchaZona : MonoBehaviour
     [Header("Visual del fuego")]
     [SerializeField] private GameObject fuegoVisual;
 
-    private bool activa;
+    public bool Activa { get; private set; }
+
+    private void Awake()
+    {
+        Desactivar(); // Estado inicial limpio y controlado
+    }
 
     public void Activar()
     {
-        activa = true;
-        Debug.Log("Antorcha ACTIVADA");
+        Activa = true;
+        Debug.Log($"Antorcha {name} ACTIVADA");
 
         if (zonaProhibida != null)
             zonaProhibida.enabled = true;
@@ -24,8 +29,8 @@ public class AntorchaZona : MonoBehaviour
 
     public void Desactivar()
     {
-        activa = false;
-        Debug.Log("Antorcha DESACTIVADA");
+        Activa = false;
+        Debug.Log($"Antorcha {name} DESACTIVADA");
 
         if (zonaProhibida != null)
             zonaProhibida.enabled = false;

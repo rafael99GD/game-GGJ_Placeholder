@@ -1,12 +1,11 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody), typeof(CapsuleCollider))]
-public class PlayerController3D : MonoBehaviour
+public class PlayerMovementController : MonoBehaviour
 {
     [Header("Movement")]
     public float maxSpeed = 14f;
     public float acceleration = 120f;
-    public float groundDeceleration = 140f;
     public float airDeceleration = 60f;
 
     [Header("Jump")]
@@ -30,15 +29,14 @@ public class PlayerController3D : MonoBehaviour
     {
         _rb = GetComponent<Rigidbody>();
         _col = GetComponent<CapsuleCollider>();
+
+        _rb.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionZ;
     }
 
     void Update()
     {
         if (Input.GetButtonDown("Jump"))
-        {
-            Debug.Log("SALTO DETECTADO");
             _jumpPressed = true;
-        }
     }
 
     void FixedUpdate()
@@ -51,38 +49,35 @@ public class PlayerController3D : MonoBehaviour
         HandleGravity();
 
         _rb.linearVelocity = _velocity;
-
     }
 
     // --------------------------
+
     void CheckGround()
     {
         Vector3 footPos = _col.bounds.center;
         footPos.y = _col.bounds.min.y + 0.01f;
 
-        float checkRadius = _col.radius * 0.05f;
+        float radius = _col.radius * 0.9f;
 
         _grounded = Physics.CheckSphere(
             footPos,
-            checkRadius,
+            radius,
             groundLayer,
             QueryTriggerInteraction.Ignore
         );
-
-        Debug.DrawRay(footPos, Vector3.down * 0.5f, _grounded ? Color.green : Color.red);
     }
 
     // --------------------------
+
     void HandleMovement()
     {
         float input = Input.GetAxisRaw("Horizontal");
-
-        float targetSpeed = input * maxSpeed;
         float accel = _grounded ? acceleration : airDeceleration;
 
         _velocity.x = Mathf.MoveTowards(
             _rb.linearVelocity.x,
-            targetSpeed,
+            input * maxSpeed,
             accel * Time.fixedDeltaTime
         );
 
@@ -90,6 +85,7 @@ public class PlayerController3D : MonoBehaviour
     }
 
     // --------------------------
+
     void HandleJump()
     {
         if (!_jumpPressed) return;
@@ -104,6 +100,7 @@ public class PlayerController3D : MonoBehaviour
     }
 
     // --------------------------
+
     void HandleGravity()
     {
         if (!_grounded)
@@ -119,12 +116,4 @@ public class PlayerController3D : MonoBehaviour
                 _velocity.y = 0f;
         }
     }
-    private void OnTriggerEnter2D(Collider2D other)
-{
-    if (other.CompareTag("ZonaProhibida"))
-    {
-        Debug.Log("No puedes pasar");
-    }
-}
-
 }
