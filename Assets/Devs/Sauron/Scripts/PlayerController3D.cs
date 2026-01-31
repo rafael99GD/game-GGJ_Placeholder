@@ -13,7 +13,7 @@ public class PlayerController3D : MonoBehaviour
     public float jumpPower = 20f;
 
     [Header("Gravity")]
-    public float gravityMultiplier = 5f; // cuánto más grande, más rápido cae
+    public float gravityMultiplier = 5f;
     public float maxFallSpeed = 50f;
 
     [Header("Ground Detection")]
@@ -43,7 +43,6 @@ public class PlayerController3D : MonoBehaviour
 
     void FixedUpdate()
     {
-        // Partimos de la velocidad actual
         _velocity = _rb.linearVelocity;
 
         CheckGround();
@@ -51,10 +50,8 @@ public class PlayerController3D : MonoBehaviour
         HandleJump();
         HandleGravity();
 
-        // Aplica la velocidad final
         _rb.linearVelocity = _velocity;
 
-        // Debug para comprobar grounded y velocidad
         Debug.Log("Grounded: " + _grounded + " | Velocity Y: " + _velocity.y);
     }
 
@@ -65,7 +62,7 @@ public class PlayerController3D : MonoBehaviour
         Vector3 footPos = _col.bounds.center;
         footPos.y = _col.bounds.min.y + 0.01f;
 
-        float checkRadius = _col.radius * 0.05f; // ligeramente más pequeño que la base del collider
+        float checkRadius = _col.radius * 0.05f;
 
         _grounded = Physics.CheckSphere(
             footPos,
@@ -74,7 +71,6 @@ public class PlayerController3D : MonoBehaviour
             QueryTriggerInteraction.Ignore
         );
 
-        // Debug visual en Scene
         Debug.DrawRay(footPos, Vector3.down * 0.5f, _grounded ? Color.green : Color.red);
     }
 
@@ -92,7 +88,7 @@ public class PlayerController3D : MonoBehaviour
             accel * Time.fixedDeltaTime
         );
 
-        _velocity.z = 0f; // bloquea eje Z
+        _velocity.z = 0f;
     }
 
     // --------------------------
@@ -103,7 +99,7 @@ public class PlayerController3D : MonoBehaviour
         if (_grounded)
         {
             _velocity.y = jumpPower;
-            _grounded = false; // para evitar que el suelo bloquee inmediatamente
+            _grounded = false;
         }
 
         _jumpPressed = false;
@@ -114,7 +110,6 @@ public class PlayerController3D : MonoBehaviour
     {
         if (!_grounded)
         {
-            // Caída directa y contundente
             _velocity.y += Physics.gravity.y * gravityMultiplier * Time.fixedDeltaTime;
 
             if (_velocity.y < -maxFallSpeed)
@@ -122,7 +117,6 @@ public class PlayerController3D : MonoBehaviour
         }
         else
         {
-            // Si tocamos suelo, bloquea velocidad descendente
             if (_velocity.y < 0f)
                 _velocity.y = 0f;
         }
