@@ -10,6 +10,9 @@ AssetOrigin:
   packageVersion: 1.0.0
   assetPath: Assets/Sinister_Heart/Mountain_VIllage_Stone_Walls/Mountain_Village_Wall_01/HDRP/plane_divided_DefaultMaterial_BaseMap.png
   uploadId: 631118
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 TextureImporter:
   internalIDToNameTable: []
@@ -106,6 +109,7 @@ TextureImporter:
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 4
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     buildTarget: Android
     maxTextureSize: 2048
     resizeAlgorithm: 0
@@ -121,6 +125,8 @@ TextureImporter:
   - serializedVersion: 4
     buildTarget: WindowsStoreApps
 =======
+=======
+>>>>>>> Stashed changes
     buildTarget: Server
 >>>>>>> Stashed changes
     maxTextureSize: 2048
