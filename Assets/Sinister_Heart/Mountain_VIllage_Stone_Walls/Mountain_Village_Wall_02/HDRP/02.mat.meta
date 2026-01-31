@@ -1,15 +1,8 @@
 fileFormatVersion: 2
-guid: 1160911514d3adf4d8ec7fac160e1b23
+guid: dcef4390f5b90554783f2ee15f361147
 NativeFormatImporter:
   externalObjects: {}
-  mainObjectFileID: 2100000
+  mainObjectFileID: 0
   userData: 
   assetBundleName: 
   assetBundleVariant: 
-AssetOrigin:
-  serializedVersion: 1
-  productId: 271887
-  packageName: Photoscanned Stone Wall Textures - 4 Pack
-  packageVersion: 1.0.0
-  assetPath: Assets/Sinister_Heart/Mountain_VIllage_Stone_Walls/Mountain_Village_Wall_02/HDRP/02.mat
-  uploadId: 631118
