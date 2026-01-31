@@ -1,266 +1,232 @@
-using NUnit.Framework.Constraints;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using static UnityEditor.PlayerSettings;
+using UnityEngine.UI;
+
+[System.Serializable]
+public class FaseBoss
+{
+    public string nombreFase = "Nombre de la Fase";
+    public float tiempoDeEstaFase = 100f;
+    public float bajaPorSegundo = 1f;
+    public float tiempoEntreBarreras = 2f;
+
+    [Tooltip("Cuanto tiempo se recupera el Boss cuando una bala toca al jugador en esta fase")]
+    public float incrementoTiempoPorGolpe = 5f;
+
+    [Header("Tipos de Disparo Activos")]
+    public bool horizontal = true;
+    public bool vertical = true;
+    public bool diagonal = true;
+
+    [Header("Configuracion Horizontal")]
+    public float offset_H = 5f;
+    public float numeroDeBalas_H = 10f;
+    public float separacion_H = 1.2f;
+    public float hueco_H = 2f;
+    public int velocidad_H = 14;
+    public int tiempoVida_H = 8;
+
+    [Header("Configuracion Vertical")]
+    public float offsetH_V = 0f;
+    public float offsetV_V = 5f;
+    public float numeroDeBalas_V = 10f;
+    public float separacion_V = 1.2f;
+    public float hueco_V = 2f;
+    public int velocidad_V = 14;
+    public int tiempoVida_V = 8;
+
+    [Header("Configuracion Diagonal")]
+    public float offsetH_D = 5f;
+    public float offsetV_D = 5f;
+    public float numeroDeBalas_D = 10f;
+    public float separacion_D = 1.2f;
+    public float hueco_D = 2f;
+    public int velocidad_D = 14;
+    public int tiempoVida_D = 8;
+}
 
 public class BossBulletSpawnerByPlayer : MonoBehaviour
 {
-    [Header("Parametros de activacion del Boss")]
-    [SerializeField] private bool activado;
+    [Header("Configuracion de Fases")]
+    [SerializeField] private FaseBoss[] fases;
+    private int indiceFaseActual = 0;
+
+    [Header("Parametros de Vidas")]
+    [SerializeField] private Image[] corazonesUI;
+    private int vidasActuales;
+
+    [Header("UI y Objetos")]
+    [SerializeField] private Slider barraProgreso;
     [SerializeField] private GameObject bala;
+    [SerializeField] private bool activado;
 
-    [Header("Direccion del disparo")]
-    [SerializeField] private bool horizontal;
-    [SerializeField] private bool vertical;
-    [SerializeField] private bool diagonal;
-    int eleccionDisparo = -1;
-
-    [Header("Parametros de generacion de barreras")]
-    [SerializeField] private int tiempoEntreBarreras;
+    private float tiempoActual;
+    private bool esperandoGolpeFantasma = false;
     private bool puedeDisparar;
+    private float playerPos;
+    private GameObject player;
 
-    [Header("Parametros de configuracion de las barreras Horizontal")]
-    [SerializeField] private float offsetBalaHorizontal_H;
-    [SerializeField] private float numeroDeBalas_H;
-    [SerializeField] private float separacionEntreBalas_H;
-    [SerializeField] private float huecoBarrera_H;
-
-    [Header("Parametros de configuracion de las balas Horizontal")]
-    [SerializeField] private int velocidadBala_H;
-    [SerializeField] public int tiempoVidaBala_H = 8;
-
-    [Header("Parametros de configuracion de las barreras Vertical")]
-    [SerializeField] private float offsetBalaHorizontal_V;
-    [SerializeField] private float offsetBalaVertical_V;
-    [SerializeField] private float numeroDeBalas_V;
-    [SerializeField] private float separacionEntreBalas_V;
-    [SerializeField] private float huecoBarrera_V;
-
-    [Header("Parametros de configuracion de las balas Vertical")]
-    [SerializeField] private int velocidadBala_V;
-    [SerializeField] public int tiempoVidaBala_V = 8;
-
-    [Header("Parametros de configuracion de las barreras Diagonal")]
-    [SerializeField] private float offsetBalaHorizontal_D;
-    [SerializeField] private float offsetBalaVertical_D;
-    [SerializeField] private float numeroDeBalas_D;
-    [SerializeField] private float separacionEntreBalas_D;
-    [SerializeField] private float huecoBarrera_D;
-
-    [Header("Parametros de configuracion de las balas Diagonal")]
-    [SerializeField] private int velocidadBala_D;
-    [SerializeField] public int tiempoVidaBala_D = 8;
-
-    //Parametros necesarios
-    GameObject player;
-    float playerPos;
-
-    //Direccion que tomara la bala
-    public static Vector3 direccionFinal;
+    // Propiedad para obtener la configuración de la fase que se está jugando
+    public FaseBoss FaseActual => fases[Mathf.Clamp(indiceFaseActual, 0, fases.Length - 1)];
 
     private void Start()
     {
-        //Al ser instanciado puede disparar desde un primer momento
         puedeDisparar = true;
-
-        //Obtenemos el Gameobject del player
         player = GameObject.FindWithTag("Player");
+        vidasActuales = corazonesUI.Length;
 
-        if (player == null) return;
+        if (fases.Length > 0) ConfigurarFase(0);
+    }
 
-        //Obtenemos en que direccion esta el player (Si > 0 = Derecha, Si < 0 = Izquierda)
-        playerPos = player.transform.position.x - this.gameObject.transform.position.x;
+    private void ConfigurarFase(int indice)
+    {
+        indiceFaseActual = indice;
+        tiempoActual = FaseActual.tiempoDeEstaFase;
+
+        if (barraProgreso != null)
+        {
+            barraProgreso.maxValue = FaseActual.tiempoDeEstaFase;
+            barraProgreso.value = tiempoActual;
+        }
     }
 
     private void Update()
     {
-        if (!activado) return;
+        if (!activado || esperandoGolpeFantasma) return;
 
-        if(puedeDisparar)
-        {
-            playerPos = player.transform.position.x - this.gameObject.transform.position.x;
+        ManejarCronometro();
 
-            puedeDisparar = false;
-
-            //Aqui seleccionamos aleatoriamente que disparo sera el siguiente (0 = Horizontal, 1 = Vertical, 2 = Diagonal)
-            List<int> opcionesValidas = new List<int>();
-
-            if (horizontal) opcionesValidas.Add(0);
-            if (vertical) opcionesValidas.Add(1);
-            if (diagonal) opcionesValidas.Add(2);
-
-            if (opcionesValidas.Count > 0) 
-            {
-                int indiceRandom = Random.Range(0, opcionesValidas.Count);
-                eleccionDisparo = opcionesValidas[indiceRandom];
-            } else
-            {
-                eleccionDisparo = -1;
-            }
-
-            Debug.Log("Eleccion Disparo: " + eleccionDisparo);
-
-            switch (eleccionDisparo)
-            {
-                case 0:
-                    Debug.Log("Disparo Horizontal efectuado");
-
-                    //Declaramos la direccion que tomara la bala
-                    if (playerPos < 0) direccionFinal = Vector3.left; // Caso Izquierda
-                    else direccionFinal = Vector3.right; // Caso Derecha
-
-                    BarreraHorizontal();
-                    break;
-
-                case 1:
-                    Debug.Log("Disparo Vertical efectuado");
-
-                    //Declaramos la direccion que tomara la bala
-                    direccionFinal = Vector3.down;
-
-                    BarreraVertical();
-                    break;
-
-                case 2:
-                    Debug.Log("Disparo Diagonal efectuado");
-
-                    //Declaramos la direccion que tomara la bala
-                    if (playerPos < 0) direccionFinal = (Vector3.down + Vector3.left).normalized; // Caso Izquierda
-                    else direccionFinal = (Vector3.down + Vector3.right).normalized; // Caso Derecha
-
-                    BarreraDiagonal();
-                    break;
-
-                default:
-                    Debug.LogWarning("No se ha elegido ningun tipo de disparo.");
-                    break;
-            }
-
-            StartCoroutine(EsperaSpawner());
-        }
-
+        if (puedeDisparar) SeleccionarDisparoAleatorio();
     }
 
-    private void BarreraHorizontal()
+    private void ManejarCronometro()
     {
-        //Obtenemos el punto mas bajo del Boss para iniciar la primera bala
-        float posicionBalaInicialY = (float)((GetComponent<MeshRenderer>().bounds.min.y) + 0.25);
-        float posicionBalaInicialX;
-        if (playerPos < 0) posicionBalaInicialX = transform.position.x - offsetBalaHorizontal_H; //Caso Izquierda
-        else posicionBalaInicialX = transform.position.x + offsetBalaHorizontal_H; // Caso Derecha
-
-        List<int> indicesSaltados = new List<int>();
-        int primeraBala = (int)Random.Range(0 + huecoBarrera_H - 1, numeroDeBalas_H);
-        for (int i = 0; i < huecoBarrera_H; i++)
+        if (tiempoActual > 0)
         {
-            indicesSaltados.Add(primeraBala - i);
+            tiempoActual -= FaseActual.bajaPorSegundo * Time.deltaTime;
+            if (barraProgreso != null) barraProgreso.value = tiempoActual;
         }
-
-        for (int i = 0; i < numeroDeBalas_H; i++)
+        else
         {
-            if (i != 0) posicionBalaInicialY += separacionEntreBalas_H;
-
-            Vector3 posicionBala = new Vector3(posicionBalaInicialX, posicionBalaInicialY, transform.position.z);
-
-            if (!indicesSaltados.Contains(i))
-            {
-                GameObject clon = Instantiate(bala, posicionBala, Quaternion.identity);
-                clon.GetComponent<Bullet>().direccionDisparo = direccionFinal;
-                clon.GetComponent<Bullet>().velocidad = velocidadBala_H;
-                clon.GetComponent<Bullet>().tiempoVida = tiempoVidaBala_H;
-            }
+            esperandoGolpeFantasma = true;
         }
-
-        direccionFinal = Vector3.zero;
-
     }
-    private void BarreraVertical()
+
+    // El incremento ahora viene de la configuración de la fase
+    public void AplicarPenalizacionJugador()
     {
-        //Obtenemos el punto mas bajo del Boss para iniciar la primera bala
-        float posicionBalaInicialY = (float)((GetComponent<MeshRenderer>().bounds.max.y) + offsetBalaVertical_V);
-        float posicionBalaInicialX;
-        if (playerPos < 0) posicionBalaInicialX = transform.position.x - offsetBalaHorizontal_V; //Caso Izquierda
-        else posicionBalaInicialX = transform.position.x + offsetBalaHorizontal_V; // Caso Derecha
+        if (esperandoGolpeFantasma) return;
 
-        List<int> indicesSaltados = new List<int>();
-        int primeraBala = (int)Random.Range(0 + huecoBarrera_V - 1, numeroDeBalas_V);
-        for (int i = 0; i < huecoBarrera_V; i++)
-        {
-            indicesSaltados.Add(primeraBala - i);
-        }
+        float cantidad = FaseActual.incrementoTiempoPorGolpe;
+        tiempoActual = Mathf.Clamp(tiempoActual + cantidad, 0, FaseActual.tiempoDeEstaFase);
 
-        for (int i = 0; i < numeroDeBalas_V; i++)
-        {
-            if (i != 0)
-            {
-                if (playerPos < 0) posicionBalaInicialX -= separacionEntreBalas_V;
-                else posicionBalaInicialX += separacionEntreBalas_V;
-            }
-            
-
-            Vector3 posicionBala = new Vector3(posicionBalaInicialX, posicionBalaInicialY, transform.position.z);
-
-            if (!indicesSaltados.Contains(i))
-            {
-                GameObject clon = Instantiate(bala, posicionBala, Quaternion.identity);
-                clon.GetComponent<Bullet>().direccionDisparo = direccionFinal;
-                clon.GetComponent<Bullet>().velocidad = velocidadBala_V;
-                clon.GetComponent<Bullet>().tiempoVida = tiempoVidaBala_V;
-            }
-        }
-
-        direccionFinal = Vector3.zero;
-
+        if (barraProgreso != null) barraProgreso.value = tiempoActual;
     }
-    private void BarreraDiagonal()
+
+    public void RecibirDañoFantasma()
     {
-        //Obtenemos el punto mas bajo del Boss para iniciar la primera bala
-        float posicionBalaInicialY = (float)((GetComponent<MeshRenderer>().bounds.max.y) + offsetBalaVertical_D);
-        float posicionBalaInicialX;
-        if (playerPos < 0) posicionBalaInicialX = transform.position.x + offsetBalaHorizontal_D; //Caso Izquierda
-        else posicionBalaInicialX = transform.position.x - offsetBalaHorizontal_D; // Caso Derecha
+        if (!esperandoGolpeFantasma) return;
 
-        List<int> indicesSaltados = new List<int>();
-        int primeraBala = (int)Random.Range(0 + huecoBarrera_D - 1, numeroDeBalas_D);
-        for (int i = 0; i < huecoBarrera_D; i++)
+        vidasActuales--;
+        ActualizarCorazonesUI();
+
+        if (vidasActuales <= 0)
         {
-            indicesSaltados.Add(primeraBala - i);
+            Debug.Log("MUERTO");
+            activado = false;
         }
-
-        for (int i = 0; i < numeroDeBalas_D; i++)
+        else
         {
-            if (i != 0)
-            {
-                if (playerPos < 0) posicionBalaInicialX -= separacionEntreBalas_D;
-                else posicionBalaInicialX += separacionEntreBalas_D;
-            }
-
-            if (i != 0)
-            {
-                if (playerPos < 0) posicionBalaInicialX -= separacionEntreBalas_D;
-                else posicionBalaInicialX += separacionEntreBalas_D;
-
-                posicionBalaInicialY += separacionEntreBalas_D;
-            }
-
-            Vector3 posicionBala = new Vector3(posicionBalaInicialX, posicionBalaInicialY, transform.position.z);
-
-            if (!indicesSaltados.Contains(i))
-            {
-                GameObject clon = Instantiate(bala, posicionBala, Quaternion.identity);
-                clon.GetComponent<Bullet>().direccionDisparo = direccionFinal;
-                clon.GetComponent<Bullet>().velocidad = velocidadBala_V;
-                clon.GetComponent<Bullet>().tiempoVida = tiempoVidaBala_V;
-            }
+            esperandoGolpeFantasma = false;
+            ConfigurarFase(indiceFaseActual + 1);
+            PossessionManager.Instance.SetControl(true);
         }
-
-        direccionFinal = Vector3.zero;
     }
-    IEnumerator EsperaSpawner()
+
+    private void ActualizarCorazonesUI()
     {
-        yield return new WaitForSeconds(tiempoEntreBarreras);
-        puedeDisparar = true;
+        for (int i = 0; i < corazonesUI.Length; i++)
+            corazonesUI[i].enabled = (i < vidasActuales);
     }
 
+    private void SeleccionarDisparoAleatorio()
+    {
+        playerPos = player.transform.position.x - transform.position.x;
+        puedeDisparar = false;
+
+        List<int> ops = new List<int>();
+        if (FaseActual.horizontal) ops.Add(0);
+        if (FaseActual.vertical) ops.Add(1);
+        if (FaseActual.diagonal) ops.Add(2);
+
+        if (ops.Count > 0)
+        {
+            int sel = ops[Random.Range(0, ops.Count)];
+            if (sel == 0) BarreraHorizontal(playerPos < 0 ? Vector3.left : Vector3.right);
+            else if (sel == 1) BarreraVertical(Vector3.down);
+            else BarreraDiagonal((playerPos < 0 ? (Vector3.down + Vector3.left) : (Vector3.down + Vector3.right)).normalized);
+
+            StartCoroutine(EsperaEntreDisparos());
+        }
+    }
+
+    // --- MÉTODOS DE BARRERAS ---
+
+    private void BarreraHorizontal(Vector3 dir)
+    {
+        float posInicY = (float)(GetComponent<MeshRenderer>().bounds.min.y + 0.25f);
+        float posInicX = (playerPos < 0) ? transform.position.x - FaseActual.offset_H : transform.position.x + FaseActual.offset_H;
+        int huecoCentral = (int)Random.Range(FaseActual.hueco_H - 1, FaseActual.numeroDeBalas_H);
+
+        for (int i = 0; i < FaseActual.numeroDeBalas_H; i++)
+        {
+            if (i != 0) posInicY += FaseActual.separacion_H;
+            if (i < huecoCentral - (FaseActual.hueco_H / 2) || i > huecoCentral + (FaseActual.hueco_H / 2))
+                CrearBala(new Vector3(posInicX, posInicY, transform.position.z), dir, FaseActual.velocidad_H, FaseActual.tiempoVida_H);
+        }
+    }
+
+    private void BarreraVertical(Vector3 dir)
+    {
+        float posInicY = (float)(GetComponent<MeshRenderer>().bounds.max.y + FaseActual.offsetV_V);
+        float posInicX = (playerPos < 0) ? transform.position.x - FaseActual.offsetH_V : transform.position.x + FaseActual.offsetH_V;
+        int huecoCentral = (int)Random.Range(FaseActual.hueco_V - 1, FaseActual.numeroDeBalas_V);
+
+        for (int i = 0; i < FaseActual.numeroDeBalas_V; i++)
+        {
+            if (i != 0) posInicX += (playerPos < 0) ? -FaseActual.separacion_V : FaseActual.separacion_V;
+            if (i < huecoCentral - (FaseActual.hueco_V / 2) || i > huecoCentral + (FaseActual.hueco_V / 2))
+                CrearBala(new Vector3(posInicX, posInicY, transform.position.z), dir, FaseActual.velocidad_V, FaseActual.tiempoVida_V);
+        }
+    }
+
+    private void BarreraDiagonal(Vector3 dir)
+    {
+        float posInicY = (float)(GetComponent<MeshRenderer>().bounds.max.y + FaseActual.offsetV_D);
+        float posInicX = (playerPos < 0) ? transform.position.x + FaseActual.offsetH_D : transform.position.x - FaseActual.offsetH_D;
+        int huecoCentral = (int)Random.Range(FaseActual.hueco_D - 1, FaseActual.numeroDeBalas_D);
+
+        for (int i = 0; i < FaseActual.numeroDeBalas_D; i++)
+        {
+            if (i != 0) { posInicX += (playerPos < 0) ? -FaseActual.separacion_D : FaseActual.separacion_D; posInicY += FaseActual.separacion_D; }
+            if (i < huecoCentral - (FaseActual.hueco_D / 2) || i > huecoCentral + (FaseActual.hueco_D / 2))
+                CrearBala(new Vector3(posInicX, posInicY, transform.position.z), dir, FaseActual.velocidad_D, FaseActual.tiempoVida_D);
+        }
+    }
+
+    private void CrearBala(Vector3 pos, Vector3 dir, int vel, int vida)
+    {
+        GameObject clon = Instantiate(bala, pos, Quaternion.identity);
+        Bullet script = clon.GetComponent<Bullet>();
+        if (script != null)
+        {
+            script.bossParent = this;
+            script.direccionDisparo = dir;
+            script.velocidad = vel;
+            script.tiempoVida = vida;
+        }
+    }
+
+    IEnumerator EsperaEntreDisparos() { yield return new WaitForSeconds(FaseActual.tiempoEntreBarreras); puedeDisparar = true; }
 }
