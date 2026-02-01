@@ -2,36 +2,24 @@ using UnityEngine;
 
 public class PossessionManager : MonoBehaviour
 {
-    public static PossessionManager Instance; // Permite que otros scripts lo llamen fácilmente
-
+    public static PossessionManager Instance;
     public PlayerMovementController player;
     public GhostController ghost;
 
-    void Awake()
-    {
-        Instance = this;
-    }
+    void Awake() => Instance = this;
 
-    void Start()
-    {
-        // Estado inicial: Jugador activo
-        SetControl(true);
-    }
+    void Start() => SetControl(true);
 
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.LeftShift))
-        {
-            // Cambia al estado opuesto al actual
             SetControl(!player.isControlEnabled);
-        }
     }
 
-    // Función centralizada para cambiar entre estados
-    public void SetControl(bool stateToHuman)
+    public void SetControl(bool humanMode)
     {
-        player.isControlEnabled = stateToHuman;
-        ghost.isActive = !stateToHuman;
+        player.isControlEnabled = humanMode;
+        ghost.isActive = !humanMode;
 
         if (ghost.isActive)
         {
@@ -40,7 +28,6 @@ public class PossessionManager : MonoBehaviour
         }
         else
         {
-            // El fantasma desaparece y el control vuelve al cuerpo físico
             ghost.gameObject.SetActive(false);
         }
     }
