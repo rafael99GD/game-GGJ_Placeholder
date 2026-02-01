@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 [System.Serializable]
 public class FaseBoss
@@ -60,7 +61,7 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
     [SerializeField] private GameObject bala;
     [SerializeField] private bool activado;
 
-    [Header("Visual Parpadeo (Nuevo)")]
+    [Header("Visual Parpadeo")]
     [SerializeField] private SpriteRenderer bossSprite;
     [SerializeField] private Color colorParpadeo = Color.red;
     [SerializeField] private float velocidadParpadeo = 0.2f;
@@ -154,7 +155,7 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
         if (barraProgreso != null) barraProgreso.value = tiempoActual;
     }
 
-    public void RecibirDañoFantasma()
+    public void RecibirDaÃ±oFantasma()
     {
         if (!esperandoGolpeFantasma) return;
 
@@ -168,6 +169,7 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
         if (vidasActuales <= 0)
         {
             activado = false;
+            SceneManager.LoadScene("Credits");
         }
         else
         {
@@ -211,9 +213,9 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
 
     private void BarreraHorizontal(Vector3 dir)
     {
-        float posInicY = (float)(GetComponent<MeshRenderer>().bounds.min.y + 0.25f);
+        float posInicY = GetComponent<MeshRenderer>().bounds.min.y + 0.25f;
         float posInicX = (playerPos < 0) ? transform.position.x - FaseActual.offset_H : transform.position.x + FaseActual.offset_H;
-        int huecoCentral = (int)Random.Range(FaseActual.hueco_H - 1, FaseActual.numeroDeBalas_H);
+        int huecoCentral = Random.Range((int)FaseActual.hueco_H - 1, (int)FaseActual.numeroDeBalas_H);
 
         for (int i = 0; i < FaseActual.numeroDeBalas_H; i++)
         {
@@ -225,13 +227,13 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
 
     private void BarreraVertical(Vector3 dir)
     {
-        float posInicY = (float)(GetComponent<MeshRenderer>().bounds.max.y + FaseActual.offsetV_V);
+        float posInicY = GetComponent<MeshRenderer>().bounds.max.y + FaseActual.offsetV_V;
         float posInicX = (playerPos < 0) ? transform.position.x - FaseActual.offsetH_V : transform.position.x + FaseActual.offsetH_V;
-        int huecoCentral = (int)Random.Range(FaseActual.hueco_V - 1, FaseActual.numeroDeBalas_V);
+        int huecoCentral = Random.Range((int)FaseActual.hueco_V - 1, (int)FaseActual.numeroDeBalas_V);
 
         for (int i = 0; i < FaseActual.numeroDeBalas_V; i++)
         {
-            if (i != 0) posInicX += (playerPos < 0) ? -FaseActual.separacion_V : FaseActual.separacion_V;
+            if (i != 0) posInicX += (playerPos < 0 ? -FaseActual.separacion_V : FaseActual.separacion_V);
             if (i < huecoCentral - (FaseActual.hueco_V / 2) || i > huecoCentral + (FaseActual.hueco_V / 2))
                 CrearBala(new Vector3(posInicX, posInicY, transform.position.z), dir, FaseActual.velocidad_V, FaseActual.tiempoVida_V);
         }
@@ -239,13 +241,17 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
 
     private void BarreraDiagonal(Vector3 dir)
     {
-        float posInicY = (float)(GetComponent<MeshRenderer>().bounds.max.y + FaseActual.offsetV_D);
+        float posInicY = GetComponent<MeshRenderer>().bounds.max.y + FaseActual.offsetV_D;
         float posInicX = (playerPos < 0) ? transform.position.x + FaseActual.offsetH_D : transform.position.x - FaseActual.offsetH_D;
-        int huecoCentral = (int)Random.Range(FaseActual.hueco_D - 1, FaseActual.numeroDeBalas_D);
+        int huecoCentral = Random.Range((int)FaseActual.hueco_D - 1, (int)FaseActual.numeroDeBalas_D);
 
         for (int i = 0; i < FaseActual.numeroDeBalas_D; i++)
         {
-            if (i != 0) { posInicX += (playerPos < 0) ? -FaseActual.separacion_D : FaseActual.separacion_D; posInicY += FaseActual.separacion_D; }
+            if (i != 0)
+            {
+                posInicX += (playerPos < 0 ? -FaseActual.separacion_D : FaseActual.separacion_D);
+                posInicY += FaseActual.separacion_D;
+            }
             if (i < huecoCentral - (FaseActual.hueco_D / 2) || i > huecoCentral + (FaseActual.hueco_D / 2))
                 CrearBala(new Vector3(posInicX, posInicY, transform.position.z), dir, FaseActual.velocidad_D, FaseActual.tiempoVida_D);
         }
