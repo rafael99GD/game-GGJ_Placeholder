@@ -1,19 +1,16 @@
-using System.Collections;
 using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
-    [Header("Parametros de la Bala")]
-    [HideInInspector] public int velocidad;
-    [HideInInspector] public int tiempoVida = 8;
-    [HideInInspector] public Vector3 direccionDisparo;
+    public BossBulletSpawnerByPlayer bossParent;
+    public Vector3 direccionDisparo;
+    public float velocidad;
+    public float tiempoVida;
+    public float danio; // Se asignará automáticamente desde el Boss
 
-    // Referencia al spawner para avisarle del golpe
-    [HideInInspector] public BossBulletSpawnerByPlayer bossParent;
-
-    private void Start()
+    void Start()
     {
-        StartCoroutine(EliminarBala());
+        Destroy(gameObject, tiempoVida);
     }
 
     void Update()
@@ -21,22 +18,16 @@ public class Bullet : MonoBehaviour
         transform.position += direccionDisparo * velocidad * Time.deltaTime;
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider other) // Sin el "2D" y con "Collider" en vez de "Collider2D"
     {
         if (other.CompareTag("Player"))
         {
-            if (bossParent != null)
-            {
-                // Ahora llamamos a la función que usa el incremento de la fase actual
-                bossParent.AplicarPenalizacionJugador();
-            }
-            Destroy(this.gameObject);
-        }
-    }
+            PlayerHealth health = other.GetComponent<PlayerHealth>();
+            if (health != null) health.RecibirDanio(danio);
 
-    IEnumerator EliminarBala()
-    {
-        yield return new WaitForSeconds(tiempoVida);
-        Destroy(this.gameObject);
+            if (bossParent != null) bossParent.AplicarPenalizacionJugador();
+
+            Destroy(gameObject);
+        }
     }
 }

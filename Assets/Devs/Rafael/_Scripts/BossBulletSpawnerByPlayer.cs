@@ -6,10 +6,13 @@ using UnityEngine.UI;
 [System.Serializable]
 public class FaseBoss
 {
+
+
     public string nombreFase = "Nombre de la Fase";
     public float tiempoDeEstaFase = 100f;
     public float bajaPorSegundo = 1f;
     public float tiempoEntreBarreras = 2f;
+    public float danioBala = 10f; // Cuánto daño hace cada bala en esta fase
 
     [Tooltip("Cuanto tiempo se recupera el Boss cuando una bala toca al jugador en esta fase")]
     public float incrementoTiempoPorGolpe = 5f;
@@ -166,24 +169,23 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
     {
         if (!esperandoGolpeFantasma) return;
 
-        // Al recibir daño, paramos el efecto visual inmediatamente
         DetenerParpadeo();
-
         vidasActuales--;
         ActualizarCorazonesUI();
 
+        // NUEVO: Curar al jugador cuando el Boss recibe el golpe
+        PlayerHealth hpJugador = GameObject.FindWithTag("Player").GetComponent<PlayerHealth>();
+        if (hpJugador != null) hpJugador.CurarVidaCompleta();
+
         if (vidasActuales <= 0)
         {
-            Debug.Log("MUERTO");
             activado = false;
         }
         else
         {
             esperandoGolpeFantasma = false;
             ConfigurarFase(indiceFaseActual + 1);
-
-            if (PossessionManager.Instance != null)
-                PossessionManager.Instance.SetControl(true);
+            PossessionManager.Instance.SetControl(true);
         }
     }
 
@@ -273,6 +275,9 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
             script.direccionDisparo = dir;
             script.velocidad = vel;
             script.tiempoVida = vida;
+
+            // PASAMOS EL DAÑO DE LA FASE ACTUAL
+            script.danio = FaseActual.danioBala;
         }
     }
 
