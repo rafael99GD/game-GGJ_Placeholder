@@ -11,6 +11,7 @@ public class GhostInteractor : MonoBehaviour
         if (Input.GetKeyDown(teclaAtaque))
         {
             Collider[] colls = Physics.OverlapSphere(transform.position, distanciaInteraccion, capaBoss);
+
             foreach (var c in colls)
             {
                 BossBulletSpawnerByPlayer boss = c.GetComponent<BossBulletSpawnerByPlayer>();

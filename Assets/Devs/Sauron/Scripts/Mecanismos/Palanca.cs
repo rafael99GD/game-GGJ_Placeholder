@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using Interactions;
-using UnityEngine.SceneManagement; // Necesario para cargar escenas
+using UnityEngine.SceneManagement;
 
 public class Palanca : MonoBehaviour, IInteractuable
 {
@@ -37,9 +37,7 @@ public class Palanca : MonoBehaviour, IInteractuable
         arm.localRotation = rotReposo;
 
         if (verja != null)
-        {
             posicionOriginalVerja = verja.position;
-        }
     }
 
     public void Interactuar()
@@ -91,11 +89,8 @@ public class Palanca : MonoBehaviour, IInteractuable
 
         verja.position = destinoFinal;
 
-        // NUEVA LÓGICA: Si la verja ha llegado al destino y la palanca está activada
         if (activada && verja.position == puntoDestino.position)
-        {
             CargarSiguienteEscena();
-        }
     }
 
     private void CargarSiguienteEscena()

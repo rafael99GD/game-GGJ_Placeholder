@@ -6,7 +6,7 @@ public class PlayerMovementController : MonoBehaviour
 {
     [Header("Visuals")]
     [SerializeField] private SpriteRenderer spriteRenderer;
-    [SerializeField] private Animator animator; // <--- REFERENCIA AL ANIMATOR
+    [SerializeField] private Animator animator;
 
     [Header("Movement")]
     public float maxSpeed = 14f;
@@ -49,9 +49,8 @@ public class PlayerMovementController : MonoBehaviour
         _rb.useGravity = false;
 
         if (ghostVisualObject != null) ghostVisualObject.SetActive(false);
-
         if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
-        if (animator == null) animator = GetComponentInChildren<Animator>(); // Busca el Animator
+        if (animator == null) animator = GetComponentInChildren<Animator>();
     }
 
     void Update()
@@ -60,16 +59,11 @@ public class PlayerMovementController : MonoBehaviour
 
         float moveInput = Input.GetAxisRaw("Horizontal");
 
-        // --- CONTROL DE ANIMACIÓN ---
-        // Usamos Mathf.Abs para que el valor siempre sea positivo aunque vayamos a la izquierda
         if (animator != null)
-        {
             animator.SetFloat("Speed", Mathf.Abs(moveInput));
-        }
 
-        // --- GIRO (FLIP) CORREGIDO ---
-        if (moveInput > 0) spriteRenderer.flipX = true;  // Si va a la derecha, activamos el volteo
-        else if (moveInput < 0) spriteRenderer.flipX = false; // Si va a la izquierda, lo dejamos normal
+        if (moveInput > 0) spriteRenderer.flipX = true;
+        else if (moveInput < 0) spriteRenderer.flipX = false;
 
         if (Input.GetButtonDown("Jump"))
         {
@@ -83,7 +77,6 @@ public class PlayerMovementController : MonoBehaviour
         }
     }
 
-    // [El resto de funciones FixedUpdate, HandleMovement, etc., se mantienen igual que antes]
     void FixedUpdate()
     {
         _velocity = _rb.linearVelocity;
@@ -158,6 +151,9 @@ public class PlayerMovementController : MonoBehaviour
             _velocity.y += Physics.gravity.y * mult * Time.fixedDeltaTime;
             if (_velocity.y < -maxFallSpeed) _velocity.y = -maxFallSpeed;
         }
-        else if (_velocity.y < 0) _velocity.y = -0.1f;
+        else if (_velocity.y < 0)
+        {
+            _velocity.y = -0.1f;
+        }
     }
 }

@@ -12,7 +12,7 @@ public class AntorchaZona : MonoBehaviour
 
     private void Awake()
     {
-        Desactivar(); // Estado inicial limpio y controlado
+        Desactivar();
     }
 
     public void Activar()

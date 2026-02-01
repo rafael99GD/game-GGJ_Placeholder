@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement; // Necesario para reiniciar la escena
+using UnityEngine.SceneManagement;
 
 public class PlayerHealth : MonoBehaviour
 {
@@ -62,8 +62,6 @@ public class PlayerHealth : MonoBehaviour
     {
         Debug.Log("Jugador derrotado. Reiniciando batalla...");
 
-        // REINICIO AUTOMÁTICO:
-        // Carga la escena que esté abierta actualmente (Game_2)
         string nombreEscenaActual = SceneManager.GetActiveScene().name;
         SceneManager.LoadScene(nombreEscenaActual);
     }

@@ -18,7 +18,7 @@ public class PlayerGhostSwitcher : MonoBehaviour
     {
         _rb = GetComponent<Rigidbody>();
         _col = GetComponent<Collider>();
-        SetState(false); // Empezamos como humano
+        SetState(false);
     }
 
     void Update()
@@ -32,25 +32,22 @@ public class PlayerGhostSwitcher : MonoBehaviour
 
     void SetState(bool fantasmaActivo)
     {
-        // 1. Activar/Desactivar Scripts
         humanoScript.enabled = !fantasmaActivo;
         fantasmaScript.enabled = fantasmaActivo;
 
-        // 2. Configurar Físicas
         _rb.useGravity = !fantasmaActivo;
 
         if (fantasmaActivo)
         {
             _rb.linearVelocity = Vector3.zero;
-            _rb.linearDamping = 0f; // Evita que se frene solo en el aire
+            _rb.linearDamping = 0f;
         }
         else
         {
-            _rb.linearDamping = 0.5f; // Recupera fricción normal si quieres
-            transform.rotation = Quaternion.identity; // Asegura que vuelva derecho
+            _rb.linearDamping = 0.5f;
+            transform.rotation = Quaternion.identity;
         }
 
-        // 3. Visuales
         ActualizarVisuales(fantasmaActivo);
     }
 
@@ -65,7 +62,6 @@ public class PlayerGhostSwitcher : MonoBehaviour
         {
             c.a = alphaFantasma;
             mat.color = c;
-            // Configuración Standard Shader para Transparencia
             mat.SetOverrideTag("RenderType", "Transparent");
             mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
             mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
@@ -78,7 +74,6 @@ public class PlayerGhostSwitcher : MonoBehaviour
         {
             c.a = 1f;
             mat.color = c;
-            // Volver a modo Opaque
             mat.SetOverrideTag("RenderType", "");
             mat.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.One);
             mat.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.Zero);

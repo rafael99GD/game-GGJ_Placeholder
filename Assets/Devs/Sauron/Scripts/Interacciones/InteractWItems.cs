@@ -19,9 +19,7 @@ public class InteractWItems : MonoBehaviour
         if (_state != null && !_state.CanInteract) return;
 
         if (Input.GetButtonDown("Interactuar"))
-        {
             Interactuar();
-        }
     }
 
     void Interactuar()

@@ -26,12 +26,11 @@ public class PlayerInteractionIndicator : MonoBehaviour
     private void DetectarInteractuable()
     {
         hayInteractuableCerca = Physics.CheckSphere(
-    transform.position,
-    radioDeteccion,
-    capaInteractuable,
-    QueryTriggerInteraction.Collide
-);
-
+            transform.position,
+            radioDeteccion,
+            capaInteractuable,
+            QueryTriggerInteraction.Collide
+        );
     }
 
     private void ActualizarIndicador()

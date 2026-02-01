@@ -6,15 +6,11 @@ using UnityEngine.UI;
 [System.Serializable]
 public class FaseBoss
 {
-
-
     public string nombreFase = "Nombre de la Fase";
     public float tiempoDeEstaFase = 100f;
     public float bajaPorSegundo = 1f;
     public float tiempoEntreBarreras = 2f;
-    public float danioBala = 10f; // Cuánto daño hace cada bala en esta fase
-
-    [Tooltip("Cuanto tiempo se recupera el Boss cuando una bala toca al jugador en esta fase")]
+    public float danioBala = 10f;
     public float incrementoTiempoPorGolpe = 5f;
 
     [Header("Tipos de Disparo Activos")]
@@ -65,7 +61,7 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
     [SerializeField] private bool activado;
 
     [Header("Visual Parpadeo (Nuevo)")]
-    [SerializeField] private SpriteRenderer bossSprite; // Arrastra aquí el objeto visual del Boss
+    [SerializeField] private SpriteRenderer bossSprite;
     [SerializeField] private Color colorParpadeo = Color.red;
     [SerializeField] private float velocidadParpadeo = 0.2f;
 
@@ -78,7 +74,6 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
     private Coroutine corrutinaParpadeo;
     private Color colorOriginal;
 
-    // Propiedad para obtener la configuración de la fase que se está jugando
     public FaseBoss FaseActual => fases[Mathf.Clamp(indiceFaseActual, 0, fases.Length - 1)];
 
     private void Start()
@@ -87,7 +82,6 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
         player = GameObject.FindWithTag("Player");
         vidasActuales = corazonesUI.Length;
 
-        // Guardamos el color inicial del sprite
         if (bossSprite != null)
             colorOriginal = bossSprite.color;
         else
@@ -98,9 +92,7 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
 
     private void ConfigurarFase(int indice)
     {
-        // Resetear visuales por si venimos de un estado de parpadeo
         DetenerParpadeo();
-
         indiceFaseActual = indice;
         tiempoActual = FaseActual.tiempoDeEstaFase;
 
@@ -129,10 +121,7 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
         }
         else if (!esperandoGolpeFantasma)
         {
-            // Entramos en estado de vulnerabilidad
             esperandoGolpeFantasma = true;
-
-            // Iniciamos el parpadeo en rojo
             if (bossSprite != null)
                 corrutinaParpadeo = StartCoroutine(ProcesoParpadeo());
         }
@@ -173,7 +162,6 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
         vidasActuales--;
         ActualizarCorazonesUI();
 
-        // NUEVO: Curar al jugador cuando el Boss recibe el golpe
         PlayerHealth hpJugador = GameObject.FindWithTag("Player").GetComponent<PlayerHealth>();
         if (hpJugador != null) hpJugador.CurarVidaCompleta();
 
@@ -220,8 +208,6 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
             StartCoroutine(EsperaEntreDisparos());
         }
     }
-
-    // --- MÉTODOS DE BARRERAS (Se mantienen igual) ---
 
     private void BarreraHorizontal(Vector3 dir)
     {
@@ -275,8 +261,6 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
             script.direccionDisparo = dir;
             script.velocidad = vel;
             script.tiempoVida = vida;
-
-            // PASAMOS EL DAÑO DE LA FASE ACTUAL
             script.danio = FaseActual.danioBala;
         }
     }

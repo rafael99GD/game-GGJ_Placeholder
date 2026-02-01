@@ -16,12 +16,18 @@ public class PlatformMovement : MonoBehaviour
 
     void Update()
     {
-        transform.position = Vector3.MoveTowards(transform.position, destinoActual, velocidad * Time.deltaTime);
+        transform.position = Vector3.MoveTowards(
+            transform.position,
+            destinoActual,
+            velocidad * Time.deltaTime
+        );
 
         if (Vector3.Distance(transform.position, destinoActual) < 0.1f)
         {
-            if (destinoActual == puntoA.transform.position) destinoActual = puntoB.transform.position;
-            else destinoActual = puntoA.transform.position;
+            if (destinoActual == puntoA.transform.position)
+                destinoActual = puntoB.transform.position;
+            else
+                destinoActual = puntoA.transform.position;
         }
     }
 }

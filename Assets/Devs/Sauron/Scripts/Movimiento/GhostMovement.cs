@@ -18,7 +18,6 @@ public class GhostMovement : MonoBehaviour
 
         Vector3 dir = new Vector3(h, v, 0).normalized;
 
-        // Movimiento directo sin gravedad (la gravedad se apaga en el Switcher)
         _rb.linearVelocity = dir * speed;
     }
 }

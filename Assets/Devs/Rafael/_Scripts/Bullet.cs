@@ -6,7 +6,7 @@ public class Bullet : MonoBehaviour
     public Vector3 direccionDisparo;
     public float velocidad;
     public float tiempoVida;
-    public float danio; // Se asignará automáticamente desde el Boss
+    public float danio;
 
     void Start()
     {
@@ -18,7 +18,7 @@ public class Bullet : MonoBehaviour
         transform.position += direccionDisparo * velocidad * Time.deltaTime;
     }
 
-    private void OnTriggerEnter(Collider other) // Sin el "2D" y con "Collider" en vez de "Collider2D"
+    private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
         {
