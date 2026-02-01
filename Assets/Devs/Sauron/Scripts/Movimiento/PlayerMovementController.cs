@@ -1,9 +1,13 @@
 using UnityEngine;
-using System.Collections; // Necesario para las Corrutinas
+using System.Collections;
 
 [RequireComponent(typeof(Rigidbody), typeof(CapsuleCollider))]
 public class PlayerMovementController : MonoBehaviour
 {
+    [Header("Visuals")]
+    [SerializeField] private SpriteRenderer spriteRenderer;
+    [SerializeField] private Animator animator; // <--- REFERENCIA AL ANIMATOR
+
     [Header("Movement")]
     public float maxSpeed = 14f;
     public float acceleration = 120f;
@@ -16,9 +20,9 @@ public class PlayerMovementController : MonoBehaviour
     private int _jumpsRemaining;
 
     [Header("Ghost Jump Effect")]
-    [SerializeField] private GameObject ghostVisualObject; // Arrastra aquí el objeto con el sprite del fantasma
-    [SerializeField] private float ghostDuration = 0.5f;   // Cuánto tiempo se queda visible
-    [SerializeField] private Vector3 ghostOffset = new Vector3(0, -1f, 0); // Posición debajo del player
+    [SerializeField] private GameObject ghostVisualObject;
+    [SerializeField] private float ghostDuration = 0.5f;
+    [SerializeField] private Vector3 ghostOffset = new Vector3(0, -1f, 0);
 
     [Header("Gravity")]
     public float gravityMultiplier = 5f;
@@ -44,13 +48,28 @@ public class PlayerMovementController : MonoBehaviour
         _rb.constraints = RigidbodyConstraints.FreezeRotation | RigidbodyConstraints.FreezePositionZ;
         _rb.useGravity = false;
 
-        // Aseguramos que el fantasma visual esté apagado al inicio
         if (ghostVisualObject != null) ghostVisualObject.SetActive(false);
+
+        if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        if (animator == null) animator = GetComponentInChildren<Animator>(); // Busca el Animator
     }
 
     void Update()
     {
         if (!isControlEnabled) return;
+
+        float moveInput = Input.GetAxisRaw("Horizontal");
+
+        // --- CONTROL DE ANIMACIÓN ---
+        // Usamos Mathf.Abs para que el valor siempre sea positivo aunque vayamos a la izquierda
+        if (animator != null)
+        {
+            animator.SetFloat("Speed", Mathf.Abs(moveInput));
+        }
+
+        // --- GIRO (FLIP) CORREGIDO ---
+        if (moveInput > 0) spriteRenderer.flipX = true;  // Si va a la derecha, activamos el volteo
+        else if (moveInput < 0) spriteRenderer.flipX = false; // Si va a la izquierda, lo dejamos normal
 
         if (Input.GetButtonDown("Jump"))
         {
@@ -64,6 +83,7 @@ public class PlayerMovementController : MonoBehaviour
         }
     }
 
+    // [El resto de funciones FixedUpdate, HandleMovement, etc., se mantienen igual que antes]
     void FixedUpdate()
     {
         _velocity = _rb.linearVelocity;
@@ -106,24 +126,17 @@ public class PlayerMovementController : MonoBehaviour
     {
         if (_jumpPressed)
         {
-            if (_grounded)
-            {
-                _velocity.y = jumpPower;
-            }
+            if (_grounded) _velocity.y = jumpPower;
             else
             {
-                // DOBLE SALTO
                 _velocity.y = doubleJumpPower;
                 _jumpsRemaining--;
-
-                // ACTIVAR EFECTO VISUAL
                 if (ghostVisualObject != null)
                 {
-                    StopAllCoroutines(); // Por si saltas muy rápido
+                    StopAllCoroutines();
                     StartCoroutine(ShowGhostEffect());
                 }
             }
-
             _isJumping = true;
             _jumpPressed = false;
         }
@@ -131,12 +144,9 @@ public class PlayerMovementController : MonoBehaviour
 
     IEnumerator ShowGhostEffect()
     {
-        // Posicionamos el fantasma relativo al jugador en ese momento
         ghostVisualObject.transform.position = transform.position + ghostOffset;
         ghostVisualObject.SetActive(true);
-
         yield return new WaitForSeconds(ghostDuration);
-
         ghostVisualObject.SetActive(false);
     }
 
