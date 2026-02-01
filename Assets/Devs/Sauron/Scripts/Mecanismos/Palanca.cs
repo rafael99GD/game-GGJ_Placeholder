@@ -3,18 +3,63 @@ using Interactions;
 
 public class Palanca : MonoBehaviour, IInteractuable
 {
-    [SerializeField] private bool activada;
-    [SerializeField] private Animator animator;
+    [Header("Referencia visual")]
+    [SerializeField] private Transform arm;   // Subcomponente "Arm"
 
-    public bool Activada => activada;
+    [Header("Ángulos en X")]
+    [SerializeField] private float anguloReposo = 25f;
+    [SerializeField] private float anguloActivado = -25f;
+
+    [Header("Animación")]
+    [SerializeField] private float duracionRotacion = 0.15f;
+
+    private bool activada;
+    private bool enRotacion;
+
+    private Quaternion rotReposo;
+    private Quaternion rotActivada;
+
+    private void Awake()
+    {
+        if (arm == null)
+        {
+            Debug.LogError("Palanca: referencia 'arm' no asignada");
+            return;
+        }
+
+        // Guardamos las dos rotaciones posibles del Arm
+        rotReposo = Quaternion.Euler(anguloReposo, 0f, 0f);
+        rotActivada = Quaternion.Euler(anguloActivado, 0f, 0f);
+
+        // Aseguramos estado inicial
+        arm.localRotation = rotReposo;
+    }
 
     public void Interactuar()
     {
+        if (enRotacion || arm == null) return;
+
         activada = !activada;
 
-        Debug.Log($"Palanca {name}: {(activada ? "ON" : "OFF")}");
+        StopAllCoroutines();
+        StartCoroutine(RotarArm(activada ? rotActivada : rotReposo));
+    }
 
-        if (animator != null)
-            animator.SetBool("Activada", activada);
+    private System.Collections.IEnumerator RotarArm(Quaternion destino)
+    {
+        enRotacion = true;
+
+        Quaternion inicio = arm.localRotation;
+        float t = 0f;
+
+        while (t < 1f)
+        {
+            t += Time.deltaTime / duracionRotacion;
+            arm.localRotation = Quaternion.Slerp(inicio, destino, t);
+            yield return null;
+        }
+
+        arm.localRotation = destino;
+        enRotacion = false;
     }
 }
