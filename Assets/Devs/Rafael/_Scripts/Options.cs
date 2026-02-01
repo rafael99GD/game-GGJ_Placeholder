@@ -1,31 +1,31 @@
 using UnityEngine;
-using UnityEngine.UI; // Necesario para controlar Sliders y Toggles
+using UnityEngine.UI;
 
 public class Options : MonoBehaviour
 {
-    [Header("Referencias UI")]
     public Slider sliderVolumen;
-    public Toggle togglePantalla;
 
-    void Start()
+    void OnEnable()
     {
-        // Al iniciar, ajustamos la UI para que coincida con la configuración actual
+        // 1. Recuperar el valor guardado (0.5 por defecto)
+        float valorGuardado = PlayerPrefs.GetFloat("VolumenGlobal", 0.5f);
+
+        // 2. Aplicarlo al AudioListener (por si acaso)
+        AudioListener.volume = valorGuardado;
+
+        // 3. Aplicarlo al Slider SIN disparar eventos accidentales
         if (sliderVolumen != null)
-            sliderVolumen.value = AudioListener.volume;
-
-        if (togglePantalla != null)
-            togglePantalla.isOn = Screen.fullScreen;
+        {
+            sliderVolumen.value = valorGuardado;
+        }
     }
 
-    // Arrastra esto al evento "On Value Changed" del Slider
-    public void CambiarVolumenGlobal(float volumen)
+    public void GuardarVolumen(float valor)
     {
-        AudioListener.volume = volumen;
-    }
-
-    // Arrastra esto al evento "On Value Changed" del Toggle
-    public void CambiarPantallaCompleta(bool pantallaCompleta)
-    {
-        Screen.fullScreen = pantallaCompleta;
+        // Solo guardamos si el valor es distinto de lo que ya tenemos
+        // Esto evita que el Slider sobrescriba con 0 al inicializarse
+        AudioListener.volume = valor;
+        PlayerPrefs.SetFloat("VolumenGlobal", valor);
+        PlayerPrefs.Save(); // Forzamos el guardado en el disco
     }
 }

@@ -61,11 +61,19 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
     [SerializeField] private GameObject bala;
     [SerializeField] private bool activado;
 
+    [Header("Visual Parpadeo (Nuevo)")]
+    [SerializeField] private SpriteRenderer bossSprite; // Arrastra aquí el objeto visual del Boss
+    [SerializeField] private Color colorParpadeo = Color.red;
+    [SerializeField] private float velocidadParpadeo = 0.2f;
+
     private float tiempoActual;
     private bool esperandoGolpeFantasma = false;
     private bool puedeDisparar;
     private float playerPos;
     private GameObject player;
+
+    private Coroutine corrutinaParpadeo;
+    private Color colorOriginal;
 
     // Propiedad para obtener la configuración de la fase que se está jugando
     public FaseBoss FaseActual => fases[Mathf.Clamp(indiceFaseActual, 0, fases.Length - 1)];
@@ -76,11 +84,20 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
         player = GameObject.FindWithTag("Player");
         vidasActuales = corazonesUI.Length;
 
+        // Guardamos el color inicial del sprite
+        if (bossSprite != null)
+            colorOriginal = bossSprite.color;
+        else
+            Debug.LogWarning("BossBulletSpawner: No has asignado el SpriteRenderer del Boss.");
+
         if (fases.Length > 0) ConfigurarFase(0);
     }
 
     private void ConfigurarFase(int indice)
     {
+        // Resetear visuales por si venimos de un estado de parpadeo
+        DetenerParpadeo();
+
         indiceFaseActual = indice;
         tiempoActual = FaseActual.tiempoDeEstaFase;
 
@@ -107,13 +124,34 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
             tiempoActual -= FaseActual.bajaPorSegundo * Time.deltaTime;
             if (barraProgreso != null) barraProgreso.value = tiempoActual;
         }
-        else
+        else if (!esperandoGolpeFantasma)
         {
+            // Entramos en estado de vulnerabilidad
             esperandoGolpeFantasma = true;
+
+            // Iniciamos el parpadeo en rojo
+            if (bossSprite != null)
+                corrutinaParpadeo = StartCoroutine(ProcesoParpadeo());
         }
     }
 
-    // El incremento ahora viene de la configuración de la fase
+    private IEnumerator ProcesoParpadeo()
+    {
+        while (esperandoGolpeFantasma)
+        {
+            bossSprite.color = colorParpadeo;
+            yield return new WaitForSeconds(velocidadParpadeo);
+            bossSprite.color = colorOriginal;
+            yield return new WaitForSeconds(velocidadParpadeo);
+        }
+    }
+
+    private void DetenerParpadeo()
+    {
+        if (corrutinaParpadeo != null) StopCoroutine(corrutinaParpadeo);
+        if (bossSprite != null) bossSprite.color = colorOriginal;
+    }
+
     public void AplicarPenalizacionJugador()
     {
         if (esperandoGolpeFantasma) return;
@@ -128,6 +166,9 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
     {
         if (!esperandoGolpeFantasma) return;
 
+        // Al recibir daño, paramos el efecto visual inmediatamente
+        DetenerParpadeo();
+
         vidasActuales--;
         ActualizarCorazonesUI();
 
@@ -140,18 +181,25 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
         {
             esperandoGolpeFantasma = false;
             ConfigurarFase(indiceFaseActual + 1);
-            PossessionManager.Instance.SetControl(true);
+
+            if (PossessionManager.Instance != null)
+                PossessionManager.Instance.SetControl(true);
         }
     }
 
     private void ActualizarCorazonesUI()
     {
         for (int i = 0; i < corazonesUI.Length; i++)
-            corazonesUI[i].enabled = (i < vidasActuales);
+        {
+            if (corazonesUI[i] != null)
+                corazonesUI[i].enabled = (i < vidasActuales);
+        }
     }
 
     private void SeleccionarDisparoAleatorio()
     {
+        if (player == null) return;
+
         playerPos = player.transform.position.x - transform.position.x;
         puedeDisparar = false;
 
@@ -171,7 +219,7 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
         }
     }
 
-    // --- MÉTODOS DE BARRERAS ---
+    // --- MÉTODOS DE BARRERAS (Se mantienen igual) ---
 
     private void BarreraHorizontal(Vector3 dir)
     {
@@ -228,5 +276,9 @@ public class BossBulletSpawnerByPlayer : MonoBehaviour
         }
     }
 
-    IEnumerator EsperaEntreDisparos() { yield return new WaitForSeconds(FaseActual.tiempoEntreBarreras); puedeDisparar = true; }
+    IEnumerator EsperaEntreDisparos()
+    {
+        yield return new WaitForSeconds(FaseActual.tiempoEntreBarreras);
+        puedeDisparar = true;
+    }
 }
